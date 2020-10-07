@@ -1,0 +1,333 @@
+---
+title: "Project2"
+author: "Brittney Tran"
+date: "9/11/2020"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE, cache = FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE)
+library("tidyverse")
+library("ggplot2")
+library("readr")
+```
+## R Markdown
+
+**Markdown file + Knitted Word Document 
+
+Step 1: 
+Create a dataframe
+
+```{r}
+# head(Traffic_Accidents_2019)
+
+Traffic_Accidents_2019 <- read_csv("Traffic_Accidents_2019.csv")
+# View(Traffic_Accidents_2019)
+
+##rename data frame 
+df <- Traffic_Accidents_2019
+
+# write.csv(df, file = "Traffic_Accidents_2019",
+#            row.names = FALSE)
+
+##Dropping Columns not needed
+drop <- c("Accident Number", "Date and Time", 
+          "Reporting Officer", "RPA", "Latitude",
+          "Longitude", "Mapped Location")
+
+df <- Traffic_Accidents_2019[,!(names(df)) %in% drop]
+head(df)
+```
+
+Step 2: 
+Write a function with closure to randomly select a sample from your data and to create a new data frame from that sample. The default sample size should be 10 but you should be able to change the argument as desired. This function may build off of the function you built in Step 2 of Class Project 1 and/or off of the shuffle function built in the Textbook Project 2.
+
+```{r}
+nrow(df) #finding rows
+DF <- df #copying dataframe again
+
+item <- function(){
+  set.seed(1234) #for same sample
+  random <- sample(1:34692, size = 10)
+  print(random)
+  assign("df", DF[random, ], envir = globalenv())
+}
+
+item() #<environment: R_GlobalEnv>
+
+##closure set up
+setup <- function(df){
+  DF <- df 
+  
+  ITEM <- function(){
+    #t <- DF[1, ]
+    set.seed(1234)
+    random <- sample(1:34692, size = 10)
+    print(random)
+    assign("df", DF[random, ], envir = parent.env(environment()))
+    #t
+  }
+  
+  #print(environment(ITEM))
+  list(item = ITEM)
+
+}
+
+accident <- setup(df)
+accident 
+item <- accident$item
+```
+
+Step 3:
+(1) Using R’s notation system, select a quantitative variable in your data frame (that is, select a numeric variable) and calculate the average, standard deviation, median, minimum, and maximum for that variable from your random sample. 
+
+```{r}
+#Sample values
+mean(df$`Number of Motor Vehicles`)
+
+sd(df$`Number of Motor Vehicles`)
+
+median(df$`Number of Motor Vehicles`)
+
+min(df$`Number of Motor Vehicles`)
+
+max(df$`Number of Motor Vehicles`)
+```
+
+(2) Using R’s notation system, select a quantitative variable in your data frame (that is, select a numeric variable) and calculate the average, standard deviation, median, minimum, and maximum for that variable for the entire data frame. 
+
+```{r}
+#Entire data frame
+mean(DF$`Number of Fatalities`)
+
+sd(DF$`Number of Fatalities`)
+
+median(DF$`Number of Fatalities`)
+
+min(DF$`Number of Fatalities`)
+
+max(DF$`Number of Fatalities`)
+```
+
+(3) Compare the average, standard deviation, median, minimum, and maximum for your random sample in step 2 to the average, standard deviation, median, minimum, and maximum for the entire data frame using logical tests.
+
+```{r}
+summary(df$`Number of Motor Vehicles`)
+summary(DF$`Number of Injuries`)
+#mean, standard deviation, median, min, max
+SAMPLESTATS <- c(2.3, 0.6749486, 2, 2, 4)
+DFSTATS <- c(0.003487836, 0.06410882, 0, 0, 3)
+
+##Logical Tests
+
+#LESS THAN OR EQUAL TO
+SAMPLESTATS <= DFSTATS
+#LESS THAN 
+SAMPLESTATS < DFSTATS
+#GREATER THAN 
+SAMPLESTATS > DFSTATS
+#GREATER THAN OR EQUAL TO
+SAMPLESTATS >= DFSTATS
+
+#EQUAL TO
+SAMPLESTATS == DFSTATS
+#NOT EQUAL TO
+SAMPLESTATS != DFSTATS
+```
+
+Step 4: 
+Use the ggplot2 package to create a boxplot of the variable you selected in Step 2 for the entire data frame. 
+
+```{r, echo = FALSE, eval = TRUE}
+## summary(SAMPLESTATS)
+## summary(DFSTATS)
+## X <- df$`Number of Motor Vehicles`
+## boxplot(X, main="Sample: Num. Motor Vehicles", range = 0.0,
+##          horizontal = TRUE)
+
+##boxplot of entire data frame
+
+summary(DF$`Number of Motor Vehicles`)
+entireDF <- DF$`Number of Motor Vehicles`
+boxplot(entireDF, main="Number of Motor Vehicles",
+        horizontal = TRUE, range =0.0)
+```
+
+Step 5:
+(1) Create a copy of your data frame.
+
+```{r}
+copy <- DF
+```
+
+(2) Replace the maximum and minimum in the copy with the mean of your sample from Steps 2 & 3. (This data frame will be referred to as the “new” data frame for the remainder of the instructions.)
+
+```{r}
+summary(df$`Number of Motor Vehicles`) #SAMPLE: min 2; max 4
+summary(DF$`Number of Motor Vehicles`) #DF mine 1; max 12
+
+summary(copy$`Number of Motor Vehicles`) #COPY: min 1; max 12
+
+#min 1 object entire dataframe 
+#max 12  object entire dataframe 
+#mean from sample 2.3
+
+#mean of sample -extreme values that impact data set
+sampleMean <- mean(df$`Number of Motor Vehicles`)
+sampleMean #2.3
+
+#assign min and max value to sample
+minCopy <- copy$`Number of Motor Vehicles` == min(copy$`Number of Motor Vehicles`)
+maxCopy <- copy$`Number of Motor Vehicles` == max(copy$`Number of Motor Vehicles`)
+
+copy$`Number of Motor Vehicles`[minCopy] <- sampleMean
+copy$`Number of Motor Vehicles`[maxCopy] <- sampleMean
+
+#print(copy$`Number of Motor Vehicles`[minCopy])
+#copy$`Number of Motor Vehicles`[maxCopy] 
+#copy$`Number of Motor Vehicles`
+```
+
+(3) Repeat Steps 2 through 4 for your new data frame.
+
+Step 2
+```{r}
+## closure global to parent
+NEW <- copy
+
+copyitem <- function(){
+  set.seed(4321) #for same sample
+  random <- sample(1:34692, size = 10)
+  print(random)
+  assign("copy", NEW[random, ], envir = globalenv())
+}
+
+copyitem() #<environment: R_GlobalEnv>
+
+setup <- function(copy){
+  NEW <- copy 
+  
+  COPYITEM <- function(){
+    #t <- DF[1, ]
+    set.seed(4321)
+    random <- sample(1:34692, size = 10)
+    print(random)
+    assign("copy", NEW[random, ], envir = parent.env(environment()))
+    #t
+  }
+  
+  #print(environment(ITEM))
+  list(copyitem = COPYITEM)
+  
+}
+
+acci <- setup(copy)
+acci 
+copyitem <- acci$copyitem
+```
+step 3a
+```{r}
+## New Data Frame Sample
+mean(copy$`Number of Motor Vehicles`)
+
+sd(copy$`Number of Motor Vehicles`)
+
+median(copy$`Number of Motor Vehicles`)
+
+min(copy$`Number of Motor Vehicles`) 
+
+max(copy$`Number of Motor Vehicles`) 
+```
+Step 3b
+```{r}
+## New data frame entire values
+mean(NEW$`Number of Fatalities`)
+
+sd(NEW$`Number of Fatalities`)
+
+median(NEW$`Number of Fatalities`)
+
+min(NEW$`Number of Fatalities`)
+
+max(NEW$`Number of Fatalities`)
+```
+Step 3c
+```{r}
+summary(copy$`Number of Motor Vehicles`)
+summary(NEW$`Number of Fatalities`)
+#mean, standard deviation, median, min, max
+copySTATS <- c(2.03, 0.09486833, 2, 2, 2.3) #Sample
+NEWSTATS <- c(0.003487836, 0.06410882, 0, 0, 3) #Entire DF
+
+##Logical test of entire data frame and sample
+
+#LESS THAN OR EQUAL TO
+ copySTATS <= NEWSTATS
+#LESS THAN 
+ copySTATS < NEWSTATS
+#GREATER THAN 
+ copySTATS > NEWSTATS
+#GREATER THAN OR EQUAL TO
+ copySTATS >= NEWSTATS
+#EQUAL TO
+ copySTATS == NEWSTATS
+#NOT EQUAL TO
+ copySTATS != NEWSTATS
+```
+Step 4
+```{r, echo = FALSE, eval = TRUE}
+#Boxplot of entire new dataframe 
+summary(NEW$`Number of Motor Vehicles`)
+copyDF <- NEW$`Number of Motor Vehicles`
+boxplot(copyDF, main="Number of Motor Vehicles",
+        horizontal = TRUE, range =0.0)
+```
+
+Step 6:
+Write a brief summary of your project to include the following sections:
+
+(1)	Methods used – address how and where you found your data as well as briefly describe the work you did in R
+
+I found my data through the Nashville data portal, where I chose the traffic accidents data provided by the Metro Nashville Police Department for 2019. When looking at the data set, I read a document describing the columns and what some of them represent to get a rough idea of what information could be derived from it. 
+
+I loaded the data into R and decided to make a copy of the data frame because the name was rather long. I decided to preprocess the data a little bit by dropping some columns that I did not believe were necessary or could be useful for statistical purposes. Then, I wrote the item function to randomly select a sample, with size 10, from the data and declared set seed before, so that the results would be consistent for testing. The random sample function was located in the local environment, so I modeled the setup function after the example in chapter 8 to apply the concept of closure in R. 
+
+In step 3, I chose the `Number of Motor Vehicles` as my quantitative variable to find the data for in my random sample; then I repeated that process but for the entire data frame with another the quantitative variable being `Number of Fatalities.` I wanted to see if there could be relationship between the two variables. For the last section in this step, I compared the values with logical tests by placing the values (mean, standard deviation, median, max, min) into vectors to compare the sample against the entire data frame.
+
+Next, I created a horizontal boxplot for the `Number of Motor Vehicles` column. The boxplot() method was used to avoid having to input both an x and y label. The five-number summary of `Number of Motor Vehicles` was displayed. 
+
+For step 5, a copy was created replacing the minimum and maximum of the mean from the sample in Steps 2 and 3 (`Number of Motor Vehicles`). This was used as the new data frame as Steps 2-4 were repeated in the same process. 
+
+(2)	Results – provide your results from steps 2 through 5. You should include a short description with the results from each step.
+
+In step 2, my original data set with the dropped values was named df. In setting up the item function, I assigned DF <- df to create a copy to make one the sample (df) and the original (DF). With that, the random sample function item(), took a random sample size of 10 from the Traffic Accidents 2019 data set; in addition, set.seed(1234) was used to produce the same result for testing. Since the function need to be enclosed and not in the global environment, the setup() function was written, so that R can evaluate the function in a parent environment as well as find the function in runtime. The setup() function took the argument, df , to produce the random sample. Then the function returned the item method as a list to access the value. It took item() rearranged the item function from the global environment to a parent environment. 
+
+In step 3, part 1, the random sample (df) was used to compute the mean, standard deviation, median, min, and max of the quantitative variable in the column `Number of Motor Vehicles.` It resulted in 2.3, 0.06749486, 2, 2, and 4, respectively. For Part 2, the entire data frame was used to calculate the same values but with the quantitative variable being the `Number of Fatalities. ` Those numbers were 0.003487836, 0.06410882, 0, 0, and 3. The values were derived from the built in functions of mean(), sd(), median(), min(), and max() with the R notation and the $ syntax to get the column values. In Part 3, I created two objects SAMPLESTATS and DFSTATS, each assigned a vector with their corresponding mean, standard deviation, median, min, and max values (in that order). The logical tests (e.g., <= , >=, >, <, ==, !=) were used to compare the results of the sample and data frame. The sample values were not less than or less than or equal to the entire data frame. The results from the logical tests showed that the random sample was greater than/equal to the entire data frame comparatively for all the values.
+
+For step 4, I created the boxplot by first getting the summary of the column `Number of Motor Vehicles` for the entire data frame. With that I created an object called “entireDF” that took the values from that column and data set. Then when calling the boxplot function, I flipped it horizontally and displayed the graph.  When plotting the values onto the boxplot, it does not look like what you would think a boxplot would look like. The stats values were really close together aside from the max value being 12. The min was 1; however, the 1st quartile, median, ad 3rd quartile was all the same with a value of 2.  The main box of the graph is a bold line with distinguishable a min and max at least. 
+
+For step 5, I created another copy of the data frame. The object ‘copy’ was the copy of the original data frame, DF. I called the summary function to make sure what values of the min and max needed to be replaced from the entire data frame, and then created another object ‘sampleMean’ to store the mean value of the random sample of `Number of Motor Vehicles` found earlier. The min value 1 and the max value 12 needed to be replaced with the sample mean of 2.3.  Afterward, I created two objects minCopy and maxCopy to assign the min and max values to the sample mean. The assignment called the `Number of Motor Vehicles` column in the copy data frame to be equal to the min and max value. Then ('copy$`Number of Motor Vehicles`[minCopy]') and ('copy$`Number of Motor Vehicles`[maxCopy]') were both assigned to the object ‘sampleMean.’ 
+
+Step 2 through 4 were repeated the same process as mentioned earlier this time the new data frame, NEW, is kept as the original, and copy is the random sample. The item function in this case is copyitem. In Step 3 part 1, the sample produced the results: mean 2.03, standard deviation 0.09486833, median 2, min 2, and max 2. For Step 3 part 2, the entire data frame produced the results: mean 0.003487836, standard deviation 0.06410882, median 0, min 0, and max 3.  Then in Step 3 part 3, the logical tests showed that for the sample copy data frame, the mean, standard deviation, median, and mine were not less than/less than or equal to the entire data frame; the max was the only one that was less than/less than equal to the entire data frame. The sample had a greater mean, standard deviation, median, and min value when compared to the whole data frame. Finally, as for the boxplot, the extreme values on the data set produces not so typical boxplot. The values were very close together a in the min, median, 1st quartile, and 3rd quartile all had the same value of 2; the max value was 10. 
+
+(3)	Discussion – How do the results from your random sample compare to those from the entire data frame? How do the results from your random sample of the new data frame compare to those from the entire new data frame? Compare the boxplot from the data frame and the new data frame. You may include any other thoughts or observations based on your results. 
+
+When comparing the random sample of `Number of Motor Vehicle` and the entire data frame of `Number of Fatalities, ` the numbers of the random sample are higher than the entire data frame. The random sample numbers seems to suggest that the average number of motor vehicles that get into an accident is approximately 2, potentially three if accounting for and rounding the 0.3 up; it also suggest the possibility of fatalities being involved is relatively low since the value is 0.003487836 for the mean. At most, from the sample compared to the entire data frame, a max of 4 could suggest possibly 3 fatalities; likewise, minimum of 2 motor vehicles involved could result in potentially 0 fatalities. This does, however, only reflect the report for 2019. 
+
+For the new data frame to see how extreme values impact the data set, the results were similar to the previous data set. The new data frame’s sample mean, standard deviation, and max were the only had slightly changed. The new entire data frame produced the same result as the previous data frame as well. The values of each remained the same. From the new sample, the mean has changed to 2.03 decrease from the previous data set, but still suggesting that for every 2 motor vehicles involved in a car accident, the number of fatalities is still relatively low. The new data frame also had a different standard deviation of 0.09486833, which is lower than before. For this new data frame the standard deviation moved a bit further away from the mean, suggesting that is potentially slightly more spread out. Finally, the max value did decrease by approximately 2. This sample value compared to the entire data frame shows that with a max of 2 (maybe 3 if counting the 0.3) of the motor vehicles involved, the number of fatalities is higher. The logical test shows that for the max values the number of fatalities is higher than the new sample. 
+
+When comparing the two boxplots, the two seem similar; however, the original boxplot has a lower min and higher max value. The quartiles and median are relatively the same, or at least close to each other in both boxplots since there is a bold line above 2. The minimum and maximum of the new data frame are different from the original data frame. The new data frame has a minimum grouped together with the quartiles and median; the max 10. In the original data frame, you can see the min and max values distinctively. The original data frame and the new data frame suggest the max values being outliers.  
+
+In the future, the possibility of combining other data sets from different years about traffic accidents might provide more information. The project could expand factor qualitive data into consideration as well. 
+
+
+(4)	Bibliography/Works Cited – sources should be appropriately cited using a standard citation style (particular choice in citation style left up to you as the individual).
+
+“Get a Mean of a Column in R.” DataScience Made Simple, www.datasciencemadesimple.com/get-mean-of-a-column-in-r-2/. 
+
+“Mean() Warning: Argument Is Not Numeric or Logical: Returning NA.” Stack Overflow, Stack Exchange Inc, 31 Oct. 2014, stackoverflow.com/questions/19697498/mean-warning-argument-is-not-numeric-or-logical-returning-na. 
+
+Metro Nashville Police Department, Information Technology. “Traffic Accidents (2019).” Data.Nashville.gov, Metropolitan Government of Nashville and Davidson County, Tennessee, 16 Jan. 2019, data.nashville.gov/Police/Traffic-Accidents-2019-/abyc-w6mc.
